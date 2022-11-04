@@ -1,0 +1,25 @@
+PROJECT INITIALIZATION
+
+1. Create a new project.
+
+2. Install Express, TypeScript, PostgresSQL and Prisma.
+
+3. Initialize project on GITHUB.
+
+4. Create new dev branch.
+
+
+PROJECT
+
+1. Get the server up and running.
+
+2. Create a new route for Person, Class and Lecture.
+
+3. Find a way to connect the three entities.
+
+4. Create a PostgresSQL database.
+
+5. Create a database.
+
+
+
