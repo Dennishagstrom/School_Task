@@ -13,9 +13,15 @@ const port = 8000;
 
 
 app.get("/persons", async (req, res) => {
+    const persons = await getPersons()
+    if (!persons.length) {
+        return res.json({
+            message: "There are no persons in the database."
+        })
+    }
     return res.status(200).json({
         message: "OK",
-        data: await getPersons()
+        data: persons
         }
     )
 });
@@ -66,6 +72,10 @@ app.patch("/persons/:id", async (req, res) => {
                 return res.json({
                     message: `${req.body.classCode} does not exist.`
                 })
+            } else if(e.code === 'P2025') {
+                return res.json({
+                    message: "Can't find the user you are trying to update."
+                })
             }
         }
     }
@@ -73,6 +83,12 @@ app.patch("/persons/:id", async (req, res) => {
 
 
 app.get("/classes", async (req, res) => {
+    const classes = await getClasses()
+    if(!classes.length) {
+        return res.json({
+            message: "There are no classes in the database"
+        })
+    }
     return res.status(200).json({
             message: "OK",
             data: await getClasses()
@@ -87,24 +103,32 @@ app.get("/classes/:id", async (req, res) => {
         return res.json({
             message: `Class ${id} does not exist.`
         })
+
     }
     return res.status(200).json({
         message: "OK",
-        data: class
+        data: xclass
     });
 })
 
 app.patch("/classes/:id", async (req, res) => {
-    interface Req {
+    try {
+        const { id } = req.params
+        const updatedClass = await updateClass(req.body, id)
+        return res.status(200).json({
+            message: "Person updated",
+            data: updatedClass
+        })
+    } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError) {
+            if (e.code === 'P2025') {
+                return res.json({
+                    message: "Can't find the class you are trying to update."
+                })
+            }
 
+        }
     }
-
-    const { id } = req.params
-    const updatedClass = await updateClass(req.body, id)
-    return res.status(200).json({
-        message: "Person updated",
-        data: updatedClass
-    })
 })
 
 app.post("/class", async (req, res) => {
@@ -127,6 +151,12 @@ app.post("/class", async (req, res) => {
 
 
 app.get("/lectures", async (req, res) => {
+    const lectures = await getLectures()
+    if (!lectures.length) {
+        return res.json({
+            message: "There are no lectures in the database"
+        })
+    }
     return res.status(200).json({
         message: "OK",
         data: await getLectures()
@@ -136,15 +166,15 @@ app.get("/lectures", async (req, res) => {
 
 app.get("/lectures/:id", async (req, res) => {
     const { id } = req.params
-    const xlecture = await getLecture(id)
-    if (xlecture === null) {
+    const lecture = await getLecture(id)
+    if (lecture === null) {
         return res.json({
             message: `Lecture ${id} does not exist.`
         })
     }
     return res.status(200).json({
         message: "OK",
-        data: xlecture
+        data: lecture
     });
 });
 
@@ -156,10 +186,15 @@ app.post("/lectures", async(req, res) => {
             data: lecture
         })
     } catch(e) {
+        console.log(e)
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
             if (e.code === 'P2002') {
                 return res.json({
                     message: `Lecture with name ${req.body.name} already exists.`
+                })
+            } else if (e.code === 'P2003') {
+                return res.json({
+                    message: "The user(s) you are trying to add does not exist."
                 })
             }
         }
@@ -191,11 +226,27 @@ app.patch("/lectures/:id", async (req, res) => {
 })
 
 app.get("/inclass/:code", async (req, res) => {
+    try {
     const { code } = req.params
+    const classmates = await getPersonsInClass(code)
+    if (!classmates.length) {
+        return res.json({
+            message: "There are no persons in this class, or the class does not exist."
+        })
+    }
     return res.status(200).json({
         message: "OK",
-        data: await getPersonsInClass(code)
+        data: classmates
     });
+    } catch(e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError) {
+            if (e) {
+                return res.json({
+                    message: "Error"
+                })
+            }
+        }
+    }
 })
 
 
